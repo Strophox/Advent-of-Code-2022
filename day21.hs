@@ -42,17 +42,17 @@ buildTree rawExprs = sprout "root"
           [name1,op,name2] -> Node name op (sprout name1) (sprout name2)
 
 rebalanceTree :: String -> UsualTree -> UsualTree
-rebalanceTree bias rt@(Node root _ l r)
-  | hasSolVar rt = balance (Node root "-" l r) (Leaf "" 0)
-  | otherwise    = error "variable to solve for not found"
+rebalanceTree target t@(Node root _ l r)
+  | hasSolution t = balance (Node root "-" l r) (Leaf "" 0)
+  | otherwise     = error "variable to solve for does not exist"
   where
-    hasSolVar = foldTree (\x _ l r -> x==bias || l || r) (\x _ -> x==bias)
+    hasSolution = foldTree (\x _ l r -> x==target || l || r) (\x _ -> x==target)
     balance :: UsualTree -> UsualTree -> UsualTree
     balance (Leaf _ _) other = other
     balance (Node name op left right) other
-      | name == bias    = other
-      | hasSolVar left  = balance left (Node name (invOp op) other right)
-      | hasSolVar right = if op`elem`commutativeOps
+      | name == target    = other
+      | hasSolution left  = balance left (Node name (invOp op) other right)
+      | hasSolution right = if op`elem`commutativeOps
                           then balance right (Node name (invOp op) other left)
                           else balance (Node name (invOp op) other right) left
 
